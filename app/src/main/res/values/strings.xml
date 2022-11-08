@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Baby Monitor</string>
+    <string name="enter_gain_factor">Enter Gain Factor</string>
+    <string name="start">start</string>
+    <string name="stop">stop</string>
+    <string name="status">Status</string>
+    <string name="speaker">speaker</string>
+</resources>
