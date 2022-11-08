@@ -39,6 +39,9 @@ public class MainActivity extends AppCompatActivity {
     private AudioTrack audioTrack;
     private AudioManager audioManager;
 
+    //超声波数据
+    private float[] sinData;
+
     private int intBufferSize;
     private short[] shortAudioData;
 
@@ -129,27 +132,41 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("MissingPermission")
     private void threadLoop(){
         int intRecordSampleRate = AudioTrack.getNativeOutputSampleRate(AudioManager.STREAM_MUSIC);
+
         intBufferSize = AudioRecord.getMinBufferSize(intRecordSampleRate, AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
-        shortAudioData = new short[intBufferSize];
+//        shortAudioData = new short[intBufferSize];
         audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,intRecordSampleRate,AudioFormat.CHANNEL_IN_STEREO,
                 AudioFormat.ENCODING_PCM_16BIT,intBufferSize);
         audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,intRecordSampleRate,AudioFormat.CHANNEL_IN_STEREO,
                 AudioFormat.ENCODING_PCM_16BIT,intBufferSize,AudioTrack.MODE_STREAM);
 
         audioTrack.setPlaybackRate(intRecordSampleRate);
-
+    //设置超声波数据
+        setSinData(1000,22000,1,intRecordSampleRate);
+        shortAudioData = new short[1 * intRecordSampleRate];
+        for (int i = 0; i < shortAudioData.length; i++) {
+            shortAudioData[i] = (short) sinData[i];
+        }
+        
         audioRecord.startRecording();
         audioTrack.play();
 
         while (isActive){
-            audioRecord.read(shortAudioData,0,shortAudioData.length);
+//            audioRecord.read(shortAudioData,0,shortAudioData.length);
 
             for (int i = 0; i < shortAudioData.length; i++) {
                 shortAudioData[i] = (short)Math.min((shortAudioData[i] * intGain),Short.MAX_VALUE);
                 waveUtil.setFloatData((float)(shortAudioData[i]));
+
             }
-            System.out.println(shortAudioData[0]);
-            audioTrack.write(shortAudioData,0,shortAudioData.length);
+
+//            int writeResult = audioTrack.write(shortAudioData,0,shortAudioData.length);
+            int writeResult = audioTrack.write(shortAudioData,0,shortAudioData.length);
+            if(writeResult >= 0){
+                //success
+            }else{
+                continue;
+            }
         }
     }
 
@@ -161,5 +178,15 @@ public class MainActivity extends AppCompatActivity {
     //停止绘制波形
     public void stopPlot(View view) {
         waveUtil.stop();
+    }
+
+    //生成超声波数据
+    private void setSinData(float volume,int frequency,int duration,int sampleRate){
+        //音量1000, 频率20000,持续事件1s,采样率48000
+        int sinDataLength = duration * sampleRate;
+        sinData = new float[sinDataLength];
+        for(float i = 0, j = 0; i < duration && j < sinDataLength; i += 1.0/(float)sampleRate, j++){
+            sinData[(int)j] = (float)(volume * Math.sin(2 * Math.PI * frequency * i));
+        }
     }
 }

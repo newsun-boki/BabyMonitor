@@ -81,6 +81,7 @@
         android:layout_marginEnd="16dp"
         android:text="@string/speaker"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:checked="true" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

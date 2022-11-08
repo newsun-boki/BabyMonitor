@@ -15,9 +15,6 @@ public class WaveUtil {
     private Timer timer;
     private TimerTask timerTask;
 
-    public float getFloatData() {
-        return floatData;
-    }
 
     public void setFloatData(float floatData) {
         this.floatData = floatData;
@@ -28,6 +25,7 @@ public class WaveUtil {
      * 模拟源源不断的数据源
      */
     public void showWaveData(final WaveShowView waveShowView){
+
         timer = new Timer();
         timerTask = new TimerTask() {
             @Override
@@ -36,7 +34,7 @@ public class WaveUtil {
                 waveShowView.showLine(floatData);
             }
         };
-        //500表示调用schedule方法后等待500ms后调用run方法，50表示以后调用run方法的时间间隔
+        //500表示调用schedule方法后等待500ms后调用run方法，1ms表示以后调用run方法的时间间隔
         timer.schedule(timerTask,500,50);
     }
 
