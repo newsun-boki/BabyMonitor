@@ -161,8 +161,8 @@ public class MainActivity extends AppCompatActivity {
 
         audioTrack.setPlaybackRate(intRecordSampleRate);
     //设置超声波数据
-        setSinData(30000F,ultrasonicFrequency / 2, 0.03,intRecordSampleRate);//频率似乎被放大了两倍
-        shortPlayAudioData = new short[(int)(0.03 * intRecordSampleRate)];
+        setSinData(30000F,ultrasonicFrequency / 2, 0.05,intRecordSampleRate);//频率似乎被放大了两倍
+        shortPlayAudioData = new short[(int)(0.05 * intRecordSampleRate)];
         for (int i = 0; i < shortPlayAudioData.length; i++) {
             shortPlayAudioData[i] = (short) sinData[i];
         }
@@ -219,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
     private void dataPreprocess(int sampleRate){
         int dataLength = shortRecordAudioData.length;//3584
         double frameShiftTime = 0.01;//帧移时长/s
-        double windowLengthTime = 0.08;//窗口时长/s 这个越大频率分辨率越高
+        double windowLengthTime = 0.045;//窗口时长/s 这个越大频率分辨率越高
         int frameShift = (int) (sampleRate * frameShiftTime);//帧移长度
         int windowLength =(int) (sampleRate * windowLengthTime);//窗口长度
         int frameNumber = (dataLength - windowLength)/frameShift + 1;
