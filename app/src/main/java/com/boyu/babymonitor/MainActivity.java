@@ -8,6 +8,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -17,6 +18,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView textViewStatus;
     private EditText editTextGainFactor;
     private Switch switchButton;
+    private ImageView starImage;
 
     //音频相关
     private AudioRecord audioRecord;
@@ -60,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     float [][]frameOut;//分窗后的结果
     double handVelocity;
     List<Double> handVelocitys;
+    private double amplitude;
 
 
     private int intGain;
@@ -77,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
         textViewStatus = findViewById(R.id.textViewStatus);
         editTextGainFactor = findViewById(R.id.editTextGainFactor);
         switchButton = findViewById(R.id.switch1);
+        starImage = findViewById(R.id.imageView);
         switchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
@@ -161,8 +166,8 @@ public class MainActivity extends AppCompatActivity {
 
         audioTrack.setPlaybackRate(intRecordSampleRate);
     //设置超声波数据
-        setSinData(30000F,ultrasonicFrequency / 2, 0.05,intRecordSampleRate);//频率似乎被放大了两倍
-        shortPlayAudioData = new short[(int)(0.05 * intRecordSampleRate)];
+        setSinData(32000F,ultrasonicFrequency / 2, 0.06,intRecordSampleRate);//频率似乎被放大了两倍
+        shortPlayAudioData = new short[(int)(0.06 * intRecordSampleRate)];
         for (int i = 0; i < shortPlayAudioData.length; i++) {
             shortPlayAudioData[i] = (short) sinData[i];
         }
@@ -231,10 +236,12 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         double averageHandVelocity = 0;
+        double averageAmplitude = 0;
         for (int i = 0; i < frameNumber; i++) {
             getHandVelocity(i, windowLength, sampleRate);
 
             averageHandVelocity += handVelocity / (double)frameNumber;
+            averageAmplitude += amplitude / (double)frameNumber;
             //使用一个队列来实现动态显示
             double normalizedValue = 0;
             maxFrequencyIndexs.offer((int)handVelocity);
@@ -252,6 +259,11 @@ public class MainActivity extends AppCompatActivity {
                 normalizedValue = (double)(handVelocity - minValue)/(double)(maxValue - minValue);
             }
             //归一化
+        }
+        if(averageAmplitude < 0.05){
+            starImage.setBackgroundColor(Color.RED);
+        }else{
+            starImage.setBackgroundColor(Color.GREEN);
         }
         //中值滤波
         handVelocitys.add(averageHandVelocity);
@@ -309,7 +321,9 @@ public class MainActivity extends AppCompatActivity {
         handVelocity = frequencyDifference / (ultrasonicFrequency + maxFrequency) * 340.29;
         if(x1Max < 0.1){//经过实测得到一般至少幅值大于0.1的才有效
             handVelocity = 0;
+            x1Max = 0.0;
         }
+        amplitude = x1Max;
         System.out.println(String.valueOf(maxFrequency) + " " + String.valueOf(handVelocity) + " " + String.valueOf(x1Max));
     }
 }
