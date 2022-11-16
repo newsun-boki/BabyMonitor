@@ -21,7 +21,11 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import fft.Complex;
@@ -46,12 +50,17 @@ public class MainActivity extends AppCompatActivity {
 
     //超声波数据
     private double[] sinData;
+    private int ultrasonicFrequency = 18000;
 
     private int intBufferSize;
     private short[] shortPlayAudioData;
     private short[] shortRecordAudioData;
     //信号处理
     Queue<Integer> maxFrequencyIndexs;
+    float [][]frameOut;//分窗后的结果
+    double handVelocity;
+    List<Double> handVelocitys;
+
 
     private int intGain;
     private boolean isActive = false;
@@ -79,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         maxFrequencyIndexs = new LinkedList<>();
+        handVelocitys = new ArrayList<>();
         //画图相关
         waveUtil = new WaveUtil();
 
@@ -151,8 +161,8 @@ public class MainActivity extends AppCompatActivity {
 
         audioTrack.setPlaybackRate(intRecordSampleRate);
     //设置超声波数据
-        setSinData(1000F,500 / 2, 1,intRecordSampleRate);//频率似乎被放大了两倍
-        shortPlayAudioData = new short[(int)(1 * intRecordSampleRate)];
+        setSinData(30000F,ultrasonicFrequency / 2, 0.03,intRecordSampleRate);//频率似乎被放大了两倍
+        shortPlayAudioData = new short[(int)(0.03 * intRecordSampleRate)];
         for (int i = 0; i < shortPlayAudioData.length; i++) {
             shortPlayAudioData[i] = (short) sinData[i];
         }
@@ -164,6 +174,8 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < shortPlayAudioData.length; i++) {
                 shortPlayAudioData[i] = (short)Math.min((shortPlayAudioData[i] * intGain),Short.MAX_VALUE);
 //                waveUtil.setFloatData((float)(shortRecordAudioData[i]));
+                 
+
             }
 
             int writeResult = audioTrack.write(shortPlayAudioData,0,shortPlayAudioData.length);
@@ -179,6 +191,7 @@ public class MainActivity extends AppCompatActivity {
 //                shortRecordAudioData[i] = (short)Math.min((shortRecordAudioData[i] * intGain),Short.MAX_VALUE);
 //                waveUtil.setFloatData((float)(shortRecordAudioData[i]));
             }
+
 
         }
     }
@@ -204,14 +217,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void dataPreprocess(int sampleRate){
-        int dataLength = shortRecordAudioData.length;
-        double frameShiftTime = 0.005;//帧移时长/s
-        double windowLengthTime = 0.04;//窗口时长/s 这个越大频率分辨率越高
+        int dataLength = shortRecordAudioData.length;//3584
+        double frameShiftTime = 0.01;//帧移时长/s
+        double windowLengthTime = 0.08;//窗口时长/s 这个越大频率分辨率越高
         int frameShift = (int) (sampleRate * frameShiftTime);//帧移长度
         int windowLength =(int) (sampleRate * windowLengthTime);//窗口长度
         int frameNumber = (dataLength - windowLength)/frameShift + 1;
-
-        float [][]frameOut;
         frameOut = new float[frameNumber][];
         for (int i = 0; i < frameNumber; i++) {
             frameOut[i] = new float[windowLength];
@@ -219,51 +230,15 @@ public class MainActivity extends AppCompatActivity {
                 frameOut[i][j] = (float)(shortRecordAudioData[i * frameShift + j]);
             }
         }
+        double averageHandVelocity = 0;
         for (int i = 0; i < frameNumber; i++) {
-            //时域信号
-            int N = (int)(Math.pow(2,Math.floor(Math.log(windowLength)/Math.log(2))));
-            Double[] x;
-            Double[] x1 = new Double[N];
+            getHandVelocity(i, windowLength, sampleRate);
 
-            //傅里叶变换计算
-            Complex[] input = new Complex[N];//声明复数数组
-            for (int j = 0; j <= N-1; j++) {
-                input[j] = new Complex(frameOut[i][j], 0);}//将实数数据转换为复数数据
-            input = FFT.getFFT(input, N);//傅里叶变换
-            x=Complex.toModArray(input);//计算傅里叶变换得到的复数数组的模值
-            for(int j=0;j<=N-1;j++) {
-                //的模值数组除以N再乘以2
-                x1[j]=x[j]/N*2;
-
-            }
-            //得到幅指最大频率
-            double frequencyInterval = sampleRate / N;//频率间隔
-            int topFrequency = 21000;
-            int bottomFrequency = 0;
-            Double x1Max = -1.0;
-            int x1MaxIndex = -1;
-            for(int j=0;j<=N/2;j++) {
-                if(j * frequencyInterval * 2 < bottomFrequency){
-                    continue;
-                }
-                if(x1[j] > x1Max){
-                    x1Max = x1[j];
-                    x1MaxIndex = j;
-                }
-                if(j * frequencyInterval * 2 > topFrequency){//大于21kHZ之后就不取了
-                    break;
-                }
-
-            }
-
-            //最终频率间隔为44100/N
-            double maxFrequency = x1MaxIndex * frequencyInterval * 2;
-            System.out.println(maxFrequency);
-
+            averageHandVelocity += handVelocity / (double)frameNumber;
             //使用一个队列来实现动态显示
             double normalizedValue = 0;
-            maxFrequencyIndexs.offer(x1MaxIndex);
-            if(maxFrequencyIndexs.size() > 50){
+            maxFrequencyIndexs.offer((int)handVelocity);
+            if(maxFrequencyIndexs.size() > 200){
                 maxFrequencyIndexs.poll();
                 int maxValue = -1;
                 int minValue = 9999;
@@ -274,16 +249,67 @@ public class MainActivity extends AppCompatActivity {
                         minValue = j;
                     }
                 }
-                normalizedValue = (double)(x1MaxIndex - minValue)/(double)(maxValue - minValue);
+                normalizedValue = (double)(handVelocity - minValue)/(double)(maxValue - minValue);
             }
             //归一化
+        }
+        //中值滤波
+        handVelocitys.add(averageHandVelocity);
+        if(handVelocitys.size() > 3){
+            handVelocitys.remove(0);
+        }
+        List<Double> sortedList = new ArrayList<Double>(handVelocitys);
+        Collections.sort(sortedList);
+        double mid = sortedList.get(sortedList.size() / 2);
+        waveUtil.setFloatData((float)(mid));
 
-            waveUtil.setFloatData((float)(normalizedValue * 60.0));
+
+    }
+    //输入为第i帧，窗长，采样率
+    void getHandVelocity(int i, int windowLength, int sampleRate){
+        int N = (int)(Math.pow(2,Math.floor(Math.log(windowLength)/Math.log(2))));
+        Double[] x;
+        Double[] x1 = new Double[N];
+
+        //傅里叶变换计算
+        Complex[] input = new Complex[N];//声明复数数组
+        for (int j = 0; j <= N-1; j++) {
+            input[j] = new Complex(frameOut[i][j], 0);}//将实数数据转换为复数数据
+        input = FFT.getFFT(input, N);//傅里叶变换
+        x=Complex.toModArray(input);//计算傅里叶变换得到的复数数组的模值
+        for(int j=0;j<=N-1;j++) {
+            //的模值数组除以N再乘以2
+            x1[j]=x[j]/N*2;
+
+        }
+        //得到幅指最大频率
+        double frequencyInterval = sampleRate / N;//频率间隔
+        int topFrequency = ultrasonicFrequency +2000;
+        int bottomFrequency = ultrasonicFrequency -2000;
+        Double x1Max = -1.0;
+        int x1MaxIndex = -1;
+        for(int j=0;j<=N/2;j++) {
+            if(j * frequencyInterval * 2 < bottomFrequency){
+                continue;
+            }
+            if(x1[j] > x1Max){
+                x1Max = x1[j];
+                x1MaxIndex = j;
+            }
+            if(j * frequencyInterval * 2 > topFrequency){//大于21kHZ之后就不取了
+                break;
+            }
+
         }
 
+        //最终频率间隔为44100/N
+        double maxFrequency = x1MaxIndex * frequencyInterval * 2;
 
-
-
-
+        double frequencyDifference = ultrasonicFrequency - maxFrequency;
+        handVelocity = frequencyDifference / (ultrasonicFrequency + maxFrequency) * 340.29;
+        if(x1Max < 0.1){//经过实测得到一般至少幅值大于0.1的才有效
+            handVelocity = 0;
+        }
+        System.out.println(String.valueOf(maxFrequency) + " " + String.valueOf(handVelocity) + " " + String.valueOf(x1Max));
     }
 }

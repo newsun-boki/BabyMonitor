@@ -35,7 +35,7 @@ public class WaveUtil {
             }
         };
         //500表示调用schedule方法后等待500ms后调用run方法，1ms表示以后调用run方法的时间间隔
-        timer.schedule(timerTask,500,50);
+        timer.schedule(timerTask,1,25);
     }
 
     /**
