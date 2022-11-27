@@ -249,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
     private void dataPreprocess(int sampleRate){
         //初始化一些数据
         int dataLength = shortRecordAudioData.length;//3584
-        double frameShiftTime = 0.01;//帧移时长/s
+        double frameShiftTime = 0.005;//帧移时长/s
         double windowLengthTime = 0.02;//窗口时长/s 这个越大频率分辨率越高
         int frameShift = (int) (sampleRate * frameShiftTime);//帧移长度
         int windowLength =(int) (sampleRate * windowLengthTime);//窗口长度
@@ -273,11 +273,19 @@ public class MainActivity extends AppCompatActivity {
                 if(j < highPassFilterNumerator.length - 1){
                     filteredFrameOut[i][j] = frameOut[i][j];
                 }else {
-                    filteredFrameOut[i][j] = (float)highPassFilterNumerator[0]*frameOut[i][j];
-                    for (int k = 1; k < highPassFilterNumerator.length; k++) {
-                        filteredFrameOut[i][j] = (float)(highPassFilterNumerator[k] * frameOut[i][j - k]
-                                            - highPassFilterDenominator[k]*filteredFrameOut[i][j - k]);
-                    }
+//                    filteredFrameOut[i][j] = (float)highPassFilterNumerator[0]*frameOut[i][j];
+//                    for (int k = 1; k < highPassFilterNumerator.length; k++) {
+//                        filteredFrameOut[i][j] += (float)(highPassFilterNumerator[k] * frameOut[i][j - k]
+//                                            - highPassFilterDenominator[k]*filteredFrameOut[i][j - k]);
+//                    }
+                    double a =   0.240151945772565655889962954461225308478 * frameOut[i][j]
+                            + -0.720455837317697023181040094641502946615 * frameOut[i][j-1]
+                            +  0.720455837317697023181040094641502946615 * frameOut[i][j-2]
+                            + -0.240151945772565655889962954461225308478 * frameOut[i][j-3];
+                    double b = -0.48070916354772053047383906232425943017  * filteredFrameOut[i][j-1]
+                            +  0.394605575830941690540498711925465613604 * filteredFrameOut[i][j-2]
+                            + -0.045900826801862991410896341903935535811 * filteredFrameOut[i][j-3];
+                    filteredFrameOut[i][j] = (float) (a - b);
                 }
 
             }
@@ -353,9 +361,8 @@ public class MainActivity extends AppCompatActivity {
 
         //最终频率间隔为44100/N
         double maxFrequency = x1MaxIndex * frequencyInterval * 2;
-
-        double frequencyDifference = ultrasonicFrequency - maxFrequency;
-        handVelocity = frequencyDifference / (ultrasonicFrequency + maxFrequency) * 340.29;
+        double frequencyDifference = 20274 - maxFrequency;
+        handVelocity = frequencyDifference / (20274 + maxFrequency) * 340.29;
         if(x1Max < 0.16){//经过实测得到一般至少幅值大于0.1的才有效
             handVelocity = 0;
             x1Max = 0.0;
