@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
     double handVelocity;
     List<Double> handVelocitys;
     private double amplitude;
+    private double lastAmplitude = 0;
     private double[] highPassFilterNumerator;
     private double[] highPassFilterDenominator;
 
@@ -191,8 +192,8 @@ public class MainActivity extends AppCompatActivity {
 
         audioTrack.setPlaybackRate(intRecordSampleRate);
     //设置超声波数据
-        setSinData(32000F,ultrasonicFrequency / 2, 0.3,intRecordSampleRate);//频率似乎被放大了两倍
-        shortPlayAudioData = new short[(int)(0.2 * intRecordSampleRate)];
+        setSinData(32000F,ultrasonicFrequency / 2, 0.1,intRecordSampleRate);//频率似乎被放大了两倍
+        shortPlayAudioData = new short[(int)(0.1 * intRecordSampleRate)];
         for (int i = 0; i < shortPlayAudioData.length; i++) {
             shortPlayAudioData[i] = (short) sinData[i];
         }
@@ -246,14 +247,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void dataPreprocess(int sampleRate){
-        //初始化一些数据
-        int dataLength = shortRecordAudioData.length;//3584
-        double frameShiftTime = 0.005;//帧移时长/s
-        double windowLengthTime = 0.02;//窗口时长/s 这个越大频率分辨率越高
-        int frameShift = (int) (sampleRate * frameShiftTime);//帧移长度
-        int windowLength =(int) (sampleRate * windowLengthTime);//窗口长度
-        int frameNumber = (dataLength - windowLength)/frameShift + 1;
+    private void initFrameOut(int frameNumber, int windowLength, int frameShift){
         frameOut = new float[frameNumber][];
         for (int i = 0; i < frameNumber; i++) {
             frameOut[i] = new float[windowLength];
@@ -266,7 +260,9 @@ public class MainActivity extends AppCompatActivity {
             filteredFrameOut[i] = new float[windowLength];
 
         }
+    }
 
+    private void highPassFilter(int frameNumber, int windowLength){
         //高通滤波
         for (int i = 0; i < frameNumber; i++) {
             for(int j = 0; j < windowLength; j++){
@@ -290,14 +286,27 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }
+    }
+    private void dataPreprocess(int sampleRate){
+        //初始化一些数据
+        int dataLength = shortRecordAudioData.length;//3584
+        double frameShiftTime = 0.02;//帧移时长/s
+        double windowLengthTime = 0.02;//窗口时长/s 这个越大频率分辨率越高
+        int frameShift = (int) (sampleRate * frameShiftTime);//帧移长度
+        int windowLength =(int) (sampleRate * windowLengthTime);//窗口长度
+        int frameNumber = (dataLength - windowLength)/frameShift + 1;
+
+        initFrameOut(frameNumber,windowLength,frameShift);//初始化数据存储的frameout和
+
+        highPassFilter(frameNumber,windowLength);//高通滤波
+
+        //取所有帧的均值
         double averageHandVelocity = 0;
         double averageAmplitude = 0;
         for (int i = 0; i < frameNumber; i++) {
             getHandVelocity(i, windowLength, sampleRate);//获取手的速度
-
             averageHandVelocity += Math.abs(handVelocity) / (double)frameNumber;
             averageAmplitude += amplitude / (double)frameNumber;
-
         }
         //通过一个标志来显示是否检测到手
         if(averageAmplitude < 0.03){
@@ -306,6 +315,7 @@ public class MainActivity extends AppCompatActivity {
             if(averageHandVelocity < 1) {
                 starImage.setBackgroundColor(Color.GREEN);
             }else{
+                averageAmplitude = 0.0;
                 starImage.setBackgroundColor(Color.YELLOW);
             }
         }
@@ -317,8 +327,9 @@ public class MainActivity extends AppCompatActivity {
         List<Double> sortedList = new ArrayList<Double>(handVelocitys);
         Collections.sort(sortedList);
         double mid = sortedList.get(sortedList.size() / 2);
-        waveUtil.setFloatData((float)(mid));
-
+        waveUtil.setFloatData((float) (averageAmplitude));
+        lastAmplitude = averageAmplitude;
+        System.out.println(averageAmplitude);
 
     }
 
@@ -368,6 +379,6 @@ public class MainActivity extends AppCompatActivity {
             x1Max = 0.0;
         }
         amplitude = x1Max;
-        System.out.println(String.valueOf(maxFrequency) + " " + String.valueOf(handVelocity) + " " + String.valueOf(x1Max));
+//        System.out.println(String.valueOf(maxFrequency) + " " + String.valueOf(handVelocity) + " " + String.valueOf(x1Max));
     }
 }
