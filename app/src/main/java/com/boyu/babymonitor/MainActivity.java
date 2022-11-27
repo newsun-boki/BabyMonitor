@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
     //超声波数据
     private double[] sinData;
-    private int ultrasonicFrequency = 18000;
+    private int ultrasonicFrequency = 20500;
 
     private int intBufferSize;
     private short[] shortPlayAudioData;
@@ -61,10 +61,12 @@ public class MainActivity extends AppCompatActivity {
     //信号处理
     Queue<Integer> maxFrequencyIndexs;
     float [][]frameOut;//分窗后的结果
+    float [][]filteredFrameOut;//滤波后结果
     double handVelocity;
     List<Double> handVelocitys;
     private double amplitude;
-
+    private double[] highPassFilterNumerator;
+    private double[] highPassFilterDenominator;
 
     private int intGain;
     private boolean isActive = false;
@@ -94,11 +96,34 @@ public class MainActivity extends AppCompatActivity {
         });
         maxFrequencyIndexs = new LinkedList<>();
         handVelocitys = new ArrayList<>();
+        highPassFilterInitial();
         //画图相关
         waveUtil = new WaveUtil();
 
     }
 
+    //使用matlab生成的6阶，采样率48000的高通巴特沃斯滤波器
+    void highPassFilterInitial(){
+        highPassFilterNumerator = new double[7];
+        highPassFilterNumerator[0] =  0.007585107580853602850246009126067292527;
+        highPassFilterNumerator[1] = -0.045510645485121646591775146362124360166;
+        highPassFilterNumerator[2] =  0.113776613712804230971187280374579131603;
+        highPassFilterNumerator[3] = -0.151702151617072400480168425929150544107;
+        highPassFilterNumerator[4] =  0.113776613712804536282519052292627748102;
+        highPassFilterNumerator[5] = -0.045510645485121868636380071393432444893;
+        highPassFilterNumerator[6] =  0.007585107580853650555141598488262388855;
+
+        highPassFilterDenominator = new double[7];
+        highPassFilterDenominator[0] = 1;
+        highPassFilterDenominator[1] = 1.485051528776588636304722967906855046749;
+        highPassFilterDenominator[2] = 1.603614295818286628048099373700097203255;
+        highPassFilterDenominator[3] = 0.924060108900980559099025413161143660545;
+        highPassFilterDenominator[4] = 0.359233258743223093922836142155574634671;
+        highPassFilterDenominator[5] = 0.075611177960372949469203263106464873999;
+        highPassFilterDenominator[6] = 0.007322146251062889091287821941023139516;
+
+
+    }
     //切换扬声器
     private void onSetListener(boolean isCall){
         if(audioManager != null){
@@ -156,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("MissingPermission")
     private void threadLoop(){
         int intRecordSampleRate = AudioTrack.getNativeOutputSampleRate(AudioManager.STREAM_MUSIC);
-        intRecordSampleRate = 44100;
+        intRecordSampleRate = 48000;
         intBufferSize = AudioRecord.getMinBufferSize(intRecordSampleRate, AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
         shortRecordAudioData = new short[intBufferSize];
         audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,intRecordSampleRate,AudioFormat.CHANNEL_IN_STEREO,
@@ -166,8 +191,8 @@ public class MainActivity extends AppCompatActivity {
 
         audioTrack.setPlaybackRate(intRecordSampleRate);
     //设置超声波数据
-        setSinData(32000F,ultrasonicFrequency / 2, 0.06,intRecordSampleRate);//频率似乎被放大了两倍
-        shortPlayAudioData = new short[(int)(0.06 * intRecordSampleRate)];
+        setSinData(32000F,ultrasonicFrequency / 2, 0.3,intRecordSampleRate);//频率似乎被放大了两倍
+        shortPlayAudioData = new short[(int)(0.2 * intRecordSampleRate)];
         for (int i = 0; i < shortPlayAudioData.length; i++) {
             shortPlayAudioData[i] = (short) sinData[i];
         }
@@ -222,9 +247,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void dataPreprocess(int sampleRate){
+        //初始化一些数据
         int dataLength = shortRecordAudioData.length;//3584
         double frameShiftTime = 0.01;//帧移时长/s
-        double windowLengthTime = 0.045;//窗口时长/s 这个越大频率分辨率越高
+        double windowLengthTime = 0.02;//窗口时长/s 这个越大频率分辨率越高
         int frameShift = (int) (sampleRate * frameShiftTime);//帧移长度
         int windowLength =(int) (sampleRate * windowLengthTime);//窗口长度
         int frameNumber = (dataLength - windowLength)/frameShift + 1;
@@ -235,35 +261,45 @@ public class MainActivity extends AppCompatActivity {
                 frameOut[i][j] = (float)(shortRecordAudioData[i * frameShift + j]);
             }
         }
+        filteredFrameOut = new float[frameNumber][];
+        for (int i = 0; i < frameNumber; i++) {
+            filteredFrameOut[i] = new float[windowLength];
+
+        }
+
+        //高通滤波
+        for (int i = 0; i < frameNumber; i++) {
+            for(int j = 0; j < windowLength; j++){
+                if(j < highPassFilterNumerator.length - 1){
+                    filteredFrameOut[i][j] = frameOut[i][j];
+                }else {
+                    filteredFrameOut[i][j] = (float)highPassFilterNumerator[0]*frameOut[i][j];
+                    for (int k = 1; k < highPassFilterNumerator.length; k++) {
+                        filteredFrameOut[i][j] = (float)(highPassFilterNumerator[k] * frameOut[i][j - k]
+                                            - highPassFilterDenominator[k]*filteredFrameOut[i][j - k]);
+                    }
+                }
+
+            }
+        }
         double averageHandVelocity = 0;
         double averageAmplitude = 0;
         for (int i = 0; i < frameNumber; i++) {
-            getHandVelocity(i, windowLength, sampleRate);
+            getHandVelocity(i, windowLength, sampleRate);//获取手的速度
 
-            averageHandVelocity += handVelocity / (double)frameNumber;
+            averageHandVelocity += Math.abs(handVelocity) / (double)frameNumber;
             averageAmplitude += amplitude / (double)frameNumber;
-            //使用一个队列来实现动态显示
-            double normalizedValue = 0;
-            maxFrequencyIndexs.offer((int)handVelocity);
-            if(maxFrequencyIndexs.size() > 200){
-                maxFrequencyIndexs.poll();
-                int maxValue = -1;
-                int minValue = 9999;
-                for(int j : maxFrequencyIndexs){
-                    if(j > maxValue){
-                        maxValue = j;
-                    }else if(j < minValue){
-                        minValue = j;
-                    }
-                }
-                normalizedValue = (double)(handVelocity - minValue)/(double)(maxValue - minValue);
-            }
-            //归一化
+
         }
-        if(averageAmplitude < 0.05){
+        //通过一个标志来显示是否检测到手
+        if(averageAmplitude < 0.03){
             starImage.setBackgroundColor(Color.RED);
         }else{
-            starImage.setBackgroundColor(Color.GREEN);
+            if(averageHandVelocity < 1) {
+                starImage.setBackgroundColor(Color.GREEN);
+            }else{
+                starImage.setBackgroundColor(Color.YELLOW);
+            }
         }
         //中值滤波
         handVelocitys.add(averageHandVelocity);
@@ -277,6 +313,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
     //输入为第i帧，窗长，采样率
     void getHandVelocity(int i, int windowLength, int sampleRate){
         int N = (int)(Math.pow(2,Math.floor(Math.log(windowLength)/Math.log(2))));
@@ -286,7 +323,7 @@ public class MainActivity extends AppCompatActivity {
         //傅里叶变换计算
         Complex[] input = new Complex[N];//声明复数数组
         for (int j = 0; j <= N-1; j++) {
-            input[j] = new Complex(frameOut[i][j], 0);}//将实数数据转换为复数数据
+            input[j] = new Complex(filteredFrameOut[i][j], 0);}//将实数数据转换为复数数据
         input = FFT.getFFT(input, N);//傅里叶变换
         x=Complex.toModArray(input);//计算傅里叶变换得到的复数数组的模值
         for(int j=0;j<=N-1;j++) {
@@ -297,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
         //得到幅指最大频率
         double frequencyInterval = sampleRate / N;//频率间隔
         int topFrequency = ultrasonicFrequency +2000;
-        int bottomFrequency = ultrasonicFrequency -2000;
+        int bottomFrequency = ultrasonicFrequency -500;
         Double x1Max = -1.0;
         int x1MaxIndex = -1;
         for(int j=0;j<=N/2;j++) {
@@ -319,7 +356,7 @@ public class MainActivity extends AppCompatActivity {
 
         double frequencyDifference = ultrasonicFrequency - maxFrequency;
         handVelocity = frequencyDifference / (ultrasonicFrequency + maxFrequency) * 340.29;
-        if(x1Max < 0.1){//经过实测得到一般至少幅值大于0.1的才有效
+        if(x1Max < 0.16){//经过实测得到一般至少幅值大于0.1的才有效
             handVelocity = 0;
             x1Max = 0.0;
         }
