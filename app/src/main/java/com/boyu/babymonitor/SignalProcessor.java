@@ -27,6 +27,7 @@ public class SignalProcessor {
     double handVelocity;
     List<Double> handVelocitys;
     private double amplitude;
+    private double phase;
     private double lastAmplitude = 0;
     //滤波器
     private double[] highPassFilterNumerator;
@@ -37,6 +38,20 @@ public class SignalProcessor {
 
     private double averageAmplitude;
     private double averageHandVelocity;
+
+    public double getAveragePhase() {
+        return averagePhase;
+    }
+    public double getDifferencePhase() {
+        return differencePhase;
+    }
+    //  相位
+    private double averagePhase;
+    private double lastPhase;
+    private double differencePhase;
+
+
+
 
     public double getAverageAmplitude() {
         return averageAmplitude;
@@ -77,10 +92,12 @@ public class SignalProcessor {
         //取所有帧的均值
         averageHandVelocity = 0;
         averageAmplitude = 0;
+        averagePhase = 0;
         for (int i = 0; i < frameNumber; i++) {
             getHandVelocity(i, windowLength, sampleRate);//获取手的速度
             averageHandVelocity += Math.abs(handVelocity) / (double)frameNumber;
             averageAmplitude += amplitude / (double)frameNumber;
+            averagePhase += Math.abs(phase)/ (double)frameNumber;
         }
         //通过一个标志来显示是否检测到手
         if(averageAmplitude < 0.03){
@@ -90,6 +107,7 @@ public class SignalProcessor {
                 detectionStatus = DETECTED_ACTIVITY;
             }else{
                 averageAmplitude = 0.0;
+                phase=0.0;
                 detectionStatus = WRONG_ACTIVITY;
             }
         }
@@ -102,7 +120,10 @@ public class SignalProcessor {
         Collections.sort(sortedList);
         double mid = sortedList.get(sortedList.size() / 2);
         lastAmplitude = averageAmplitude;
-        System.out.println(averageAmplitude);
+        differencePhase = averagePhase - lastPhase;
+        lastPhase = averagePhase;
+
+//        System.out.println(" averageAmplitude:" + averageAmplitude + " averageHandVelocity:" + averageHandVelocity);
 
     }
 
@@ -171,7 +192,7 @@ public class SignalProcessor {
     //输入为第i帧，窗长，采样率
     private void getHandVelocity(int i, int windowLength, int sampleRate){
         int N = (int)(Math.pow(2,Math.floor(Math.log(windowLength)/Math.log(2))));
-        Double[] x;
+        Double[] x,p;
         Double[] x1 = new Double[N];
 
         //傅里叶变换计算
@@ -180,6 +201,7 @@ public class SignalProcessor {
             input[j] = new Complex(filteredFrameOut[i][j], 0);}//将实数数据转换为复数数据
         input = FFT.getFFT(input, N);//傅里叶变换
         x=Complex.toModArray(input);//计算傅里叶变换得到的复数数组的模值
+        p=Complex.toPhaseArray(input);
         for(int j=0;j<=N-1;j++) {
             //的模值数组除以N再乘以2
             x1[j]=x[j]/N*2;
@@ -212,8 +234,10 @@ public class SignalProcessor {
         if(x1Max < 0.16){//经过实测得到一般至少幅值大于0.1的才有效
             handVelocity = 0;
             x1Max = 0.0;
+            p[x1MaxIndex]=0.0;
         }
         amplitude = x1Max;
-//        System.out.println(String.valueOf(maxFrequency) + " " + String.valueOf(handVelocity) + " " + String.valueOf(x1Max));
+        System.out.println(String.valueOf(maxFrequency) + " " + String.valueOf(frequencyDifference) + " " + String.valueOf(x1Max)+ " "+p[x1MaxIndex]);
+        phase = Math.abs(p[x1MaxIndex]);
     }
 }

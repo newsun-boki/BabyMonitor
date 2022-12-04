@@ -108,13 +108,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void closeSpeaker() {
-        if(audioManager.isSpeakerphoneOn()){
-            audioManager.setSpeakerphoneOn(false);
-//            audioManager.setRouting(AudioManager.MODE_NORMAL, AudioManager.ROUTE_EARPIECE, AudioManager.ROUTE_ALL);
+//        if(audioManager.isSpeakerphoneOn()){
+            audioManager.setSpeakerphoneOn(true);
+//            audioManager.setRouting(AudioManager.MODE_NORMAL, AudioManager.ROUTE_EARPIECE, AudioManager.ROUTE_ALL);Pa
             audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
 //            setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
             Toast.makeText(this,"Speaker off",Toast.LENGTH_SHORT).show();
-        }
+//        }
     }
 
     private void openSpeaker() {
@@ -200,7 +200,8 @@ public class MainActivity extends AppCompatActivity {
             signalProcessor.setShortRecordAudioData(shortRecordAudioData);
             signalProcessor.dataProcess();
 //            dataPreprocess(intRecordSampleRate);
-            waveUtil.setFloatData((float) signalProcessor.getAverageAmplitude());
+//            waveUtil.setFloatData((float) signalProcessor.getAverageAmplitude());
+            waveUtil.setFloatData((float) signalProcessor.getDifferencePhase());
             setStarImage(signalProcessor.getDetectionStatus());
 
         }

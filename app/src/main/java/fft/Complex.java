@@ -11,6 +11,9 @@ public class Complex {
     public double getMod() {// 求复数的模
         return Math.sqrt(i * i + j * j);
     }
+    public double getPhase() {// 求复数的模
+        return Math.atan(j/i);
+    }
 
     public static Complex Add(Complex a, Complex b) {
         return new Complex(a.i + b.i, a.j + b.j);
@@ -36,6 +39,14 @@ public class Complex {
         Double[] res = new Double[complex.length];
         for (int i = 0; i < complex.length; i++) {
             res[i] = complex[i].getMod();
+        }
+        return res;
+    }
+
+    public static Double[] toPhaseArray(Complex[] complex){
+        Double[] res = new Double[complex.length];
+        for (int i = 0; i < complex.length; i++) {
+            res[i] = complex[i].getPhase();
         }
         return res;
     }
