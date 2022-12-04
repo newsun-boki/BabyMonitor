@@ -30,7 +30,7 @@ public class WaveShowView extends View {
     private int row;//背景网格的行数和列数
 
     //心电
-    private float MAX_VALUE = 2;
+    private float MAX_VALUE = (float) 0.5;
     private float WAVE_LINE_STROKE_WIDTH = 2;
     private int mWaveLineColor = Color.parseColor("#EE4000");//波形颜色
     private  float nowX,nowY;//目前的xy坐标

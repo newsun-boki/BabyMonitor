@@ -123,7 +123,7 @@ public class SignalProcessor {
         differencePhase = averagePhase - lastPhase;
         lastPhase = averagePhase;
 
-//        System.out.println(" averageAmplitude:" + averageAmplitude + " averageHandVelocity:" + averageHandVelocity);
+        System.out.println(" averageAmplitude:" + averageAmplitude + " differencePhase:" + differencePhase + " frameNumber:"+frameNumber);
 
     }
 
@@ -237,7 +237,7 @@ public class SignalProcessor {
             p[x1MaxIndex]=0.0;
         }
         amplitude = x1Max;
-        System.out.println(String.valueOf(maxFrequency) + " " + String.valueOf(frequencyDifference) + " " + String.valueOf(x1Max)+ " "+p[x1MaxIndex]);
+//        System.out.println(String.valueOf(maxFrequency) + " " + String.valueOf(frequencyDifference) + " " + String.valueOf(x1Max)+ " "+p[x1MaxIndex]);
         phase = Math.abs(p[x1MaxIndex]);
     }
 }
