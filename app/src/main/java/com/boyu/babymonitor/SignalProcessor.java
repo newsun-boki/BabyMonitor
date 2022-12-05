@@ -26,6 +26,7 @@ public class SignalProcessor {
     float [][]filteredFrameOut;//滤波后结果
     double handVelocity;
     List<Double> handVelocitys;
+    List<Double> differencePhases;
     private double amplitude;
     private double phase;
     private double lastAmplitude = 0;
@@ -69,6 +70,7 @@ public class SignalProcessor {
         this.sampleRate = sampleRate;
         this.ultrasonicFrequency = ultrasonicFrequency;
         handVelocitys = new ArrayList<>();
+        differencePhases = new ArrayList<>();
         highPassFilterInitial();
     }
 
@@ -112,18 +114,29 @@ public class SignalProcessor {
             }
         }
         //中值滤波
-        handVelocitys.add(averageHandVelocity);
+        handVelocitys.add(averagePhase);
         if(handVelocitys.size() > 3){
             handVelocitys.remove(0);
         }
         List<Double> sortedList = new ArrayList<Double>(handVelocitys);
         Collections.sort(sortedList);
         double mid = sortedList.get(sortedList.size() / 2);
-        lastAmplitude = averageAmplitude;
-        differencePhase = averagePhase - lastPhase;
-        lastPhase = averagePhase;
+        //均值滤波
+        differencePhases.add( mid - lastPhase);
+        double averageFilteredPhase = 0;
+        if(differencePhases.size() > 3){
+            differencePhases.remove(0);
 
-        System.out.println(" averageAmplitude:" + averageAmplitude + " differencePhase:" + differencePhase + " frameNumber:"+frameNumber);
+            for (int i = 0; i < 3; i++) {
+                averageFilteredPhase += differencePhases.get(i)/3.0;
+            }
+        }
+
+        lastAmplitude = averageAmplitude;
+        differencePhase = averageFilteredPhase;
+        lastPhase = mid;
+
+//        System.out.println(" averageAmplitude:" + averageAmplitude + " differencePhase:" + differencePhase + " frameNumber:"+frameNumber);
 
     }
 

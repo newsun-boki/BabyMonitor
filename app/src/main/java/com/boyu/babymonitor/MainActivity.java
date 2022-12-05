@@ -9,6 +9,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -61,6 +63,10 @@ public class MainActivity extends AppCompatActivity {
     private short[] shortRecordAudioData;
 
     SignalProcessor signalProcessor;    //信号处理
+
+    //imu
+    private SensorManager sensorManager;
+    private Sensor sensor;
 
 
     private int intGain;
@@ -175,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
 
         audioTrack.setPlaybackRate(intRecordSampleRate);
     //设置超声波数据
-        setSinData(32000F,ultrasonicFrequency / 2, 0.1,intRecordSampleRate);//频率似乎被放大了两倍
+        setSinData(30000F,ultrasonicFrequency / 2, 0.1,intRecordSampleRate);//频率似乎被放大了两倍
         shortPlayAudioData = new short[(int)(0.1 * intRecordSampleRate)];
         for (int i = 0; i < shortPlayAudioData.length; i++) {
             shortPlayAudioData[i] = (short) sinData[i];
@@ -197,12 +203,15 @@ public class MainActivity extends AppCompatActivity {
             }
             //接收回声存储在shortRecordAudioData
             audioRecord.read(shortRecordAudioData,0,shortRecordAudioData.length);
+            //
             signalProcessor.setShortRecordAudioData(shortRecordAudioData);
             signalProcessor.dataProcess();
 //            dataPreprocess(intRecordSampleRate);
 //            waveUtil.setFloatData((float) signalProcessor.getAverageAmplitude());
             waveUtil.setFloatData((float) signalProcessor.getDifferencePhase());
             setStarImage(signalProcessor.getDetectionStatus());
+
+            //条用
 
         }
     }
