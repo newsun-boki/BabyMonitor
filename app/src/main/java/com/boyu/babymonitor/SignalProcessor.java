@@ -50,6 +50,7 @@ public class SignalProcessor {
     private double averagePhase;
     private double lastPhase;
     private double differencePhase;
+    private double lastAverageFilteredPhase = 0;
 
 
 
@@ -124,16 +125,18 @@ public class SignalProcessor {
         //均值滤波
         differencePhases.add( mid - lastPhase);
         double averageFilteredPhase = 0;
-        if(differencePhases.size() > 3){
+        if(differencePhases.size() > 6){
             differencePhases.remove(0);
 
-            for (int i = 0; i < 3; i++) {
-                averageFilteredPhase += differencePhases.get(i)/3.0;
+            for (int i = 0; i < 6; i++) {
+                averageFilteredPhase += differencePhases.get(i)/6.0;
             }
         }
 
         lastAmplitude = averageAmplitude;
-        differencePhase = averageFilteredPhase;
+
+        differencePhase = averageFilteredPhase - lastAverageFilteredPhase;
+        lastAverageFilteredPhase = averageFilteredPhase;
         lastPhase = mid;
 
 //        System.out.println(" averageAmplitude:" + averageAmplitude + " differencePhase:" + differencePhase + " frameNumber:"+frameNumber);
