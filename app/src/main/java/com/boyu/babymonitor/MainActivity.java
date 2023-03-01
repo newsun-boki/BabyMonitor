@@ -294,7 +294,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //            Log.i("Main"," " + signalProcessor.getDifferencePhase() + " "+0.05*Z_vertical);
             waveUtil.setFloatData((float) datatoShow);
             featureData.add((float) datatoShow);
-            socket_client.sendMessage(Float.toString((float) datatoShow));
+            String msg = Float.toString((float) datatoShow) + "," + Float.toString(X_lateral) + "," + Float.toString(Y_longitudinal) + "," + Float.toString(Z_vertical);
+            socket_client.sendMessage(msg);
             setStarImage(signalProcessor.getDetectionStatus());
 
 

@@ -1,16 +1,40 @@
 import socket
+import keyboard
 
-# 创建一个服务器的套接字基于udp，type=socket.SOCK_DGRAM表示使用udp协议
-udp_sk = socket.socket(type=socket.SOCK_DGRAM)
-udp_sk.bind(('', 555))  # 绑定服务器的ip和端口的套接字
 
-i = 0
-while i < 50:
-    # udp协议不用建立连接
-    print("接收")
-    msg, addr = udp_sk.recvfrom(1024)  # 接收1024字节的消息 msg表示内容，addr表示ip和端口
-    print(msg.decode('utf-8'))
-    print("发送")
-    udp_sk.sendto('hello'.encode('utf-8'), addr)  #发送消息，需写入对方的ip和端口
-    i = i + 1
-udp_sk.close()
+class UDPServer:
+    def __init__(self, address='', port=555):
+        self.address = address
+        self.port = port
+        self.socket = None
+        
+    def create_socket(self):
+        self.socket = socket.socket(type=socket.SOCK_DGRAM)
+        self.socket.bind((self.address, self.port))
+        print(f'Server listening on {self.address}:{self.port}...')
+        
+    def receive_socket(self):
+        
+        # print("begin receive")
+        msg, addr = self.socket.recvfrom(1024)
+        # print("receive " + msg.decode('utf-8') + " from " + str(addr))
+        # print("发送")
+        # self.socket.sendto('hello'.encode('utf-8'), addr)
+        return msg.decode('utf-8')
+    
+    def close_socket(self):
+        self.socket.close()
+        print("Connection closed.")
+
+
+if __name__ == "__main__":
+    udpServer = UDPServer('',555)
+    udpServer.create_socket()
+
+    while True:
+        msg = udpServer.receive_socket()
+        print(float(msg))
+        if keyboard.is_pressed('q'):
+            break
+    udpServer.close_socket()
+        
