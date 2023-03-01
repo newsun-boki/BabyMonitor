@@ -32,6 +32,9 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -74,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private int intBufferSize;
     private short[] shortPlayAudioData;
     private short[] shortRecordAudioData;
-    private List<Float> imuData;
+    private List<Float> featureData;
 
     SignalProcessor signalProcessor;    //信号处理
 
@@ -91,6 +94,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private boolean isActive = false;
 
     private Thread thread;
+
+    private Socket socket_client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,6 +129,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mPowerManager = (PowerManager) getSystemService(POWER_SERVICE);
         mWakeLock = mPowerManager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, getClass()
                 .getName());
+        //网络传输
+        socket_client = new Socket("192.168.43.125",555,MainActivity.this);
 
 
     }
@@ -174,11 +181,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
+
     public void buttonStart(View view){
         isActive = true;
         intGain = Integer.parseInt(editTextGainFactor.getText().toString());
         textViewStatus.setText("Active");
-
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -195,7 +202,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         audioRecord.stop();
         textViewStatus.setText("Stopped");
         stopPlot(view);
-        writeImuDataToCsv();
+        writeFeatureDataToCsv();
     }
 
     public void setStarImage(int detectionStatus){
@@ -212,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    private void writeImuDataToCsv() {
+    private void writeFeatureDataToCsv() {
         // 检查是否已经有了 CSV 文件
         SimpleDateFormat tempDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String datetime = tempDate.format(new java.util.Date());
@@ -232,7 +239,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         try (FileWriter fileWriter = new FileWriter(csvFile, true)) {
 
             // 写入 IMU 数据
-            for (float value : imuData) {
+            for (float value : featureData) {
                 fileWriter.write(String.valueOf(value));
                 fileWriter.write(",\n");
             }
@@ -260,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         for (int i = 0; i < shortPlayAudioData.length; i++) {
             shortPlayAudioData[i] = (short) sinData[i];
         }
-        imuData = new ArrayList<>();
+        featureData = new ArrayList<>();
         audioRecord.startRecording();
         audioTrack.play();
 
@@ -284,9 +291,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //            waveUtil.setFloatData((float) signalProcessor.getAverageAmplitude());
             double accelatate = 0.01* Math.sqrt(Math.pow(X_lateral,2) + Math.pow(Y_longitudinal,2) + Math.pow(Z_vertical,2));
             float datatoShow =  (float)(signalProcessor.getDifferencePhase() + 0.05*Z_vertical);
-            Log.i("Main"," " + signalProcessor.getDifferencePhase() + " "+0.05*Z_vertical);
+//            Log.i("Main"," " + signalProcessor.getDifferencePhase() + " "+0.05*Z_vertical);
             waveUtil.setFloatData((float) datatoShow);
-            imuData.add((float) datatoShow);
+            featureData.add((float) datatoShow);
+            socket_client.sendMessage(Float.toString((float) datatoShow));
             setStarImage(signalProcessor.getDetectionStatus());
 
 
