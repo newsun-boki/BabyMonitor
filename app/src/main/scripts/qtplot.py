@@ -4,15 +4,19 @@ from pyqtgraph import PlotWidget
 from PyQt5 import QtCore,QtWidgets
 import numpy as np
 import pyqtgraph as pq
-
 class Window(QtWidgets.QWidget):
-    def __init__(self,qv):
+    def __init__(self,qv,data_type):
         super().__init__()
         # 设置下尺寸
         self.resize(600,600)
         # 添加 PlotWidget 控件
         self.plotWidget_ted = PlotWidget(self)
-        self.plotWidget_ted.setRange(yRange=(-0.3, 0.3))
+        if data_type == 'acc':
+            self.setWindowTitle("acc")
+            self.plotWidget_ted.setRange(yRange=(-1, 1))
+        else:
+            self.setWindowTitle("feature")
+            self.plotWidget_ted.setRange(yRange=(-0.1, 0.1))
 
         # 设置该控件尺寸和相对位置
         self.plotWidget_ted.setGeometry(QtCore.QRect(25,25,550,550))
@@ -40,19 +44,19 @@ class Window(QtWidgets.QWidget):
                 del(self.vs[0])
         # 数据填充到绘制曲线中
             self.curve1.setData(self.vs)
-            
+
     def keyPressEvent(self, event):
         # 按下'q'键关闭窗口
         if event.key() == QtCore.Qt.Key_Q:
             self.close()
 
-def qtplot(qv):
+def qtplot(qv, type):
     import sys
     # PyQt5 程序固定写法
     app = QtWidgets.QApplication(sys.argv)
 
     # 将绑定了绘图控件的窗口实例化并展示
-    window = Window(qv)
+    window = Window(qv,type)
     window.show()
 
     # PyQt5 程序固定写法
