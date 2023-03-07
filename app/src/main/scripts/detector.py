@@ -7,40 +7,47 @@ import time
 import os
 from datetime import datetime
 import matplotlib.pyplot as plt
-class ConvNet(nn.Module):
-    def __init__(self):
-        super(ConvNet, self).__init__()
-        self.conv1 = nn.Conv1d(in_channels=1, out_channels=16, kernel_size=3, stride=1, padding=1)
-        self.relu = nn.ReLU()
-        self.pool = nn.MaxPool1d(kernel_size=2)
-        self.fc1 = nn.Linear(16*50, 10)
+import numpy as np
+
+
+class LSTM(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, num_classes):
+        super(LSTM, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, num_classes)
         
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.relu(x)
-        x = self.pool(x)
-        x = x.view(-1, 16*50)
-        x = self.fc1(x)
-        return x
-
+        device = torch.device("cpu")
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(device)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(device)
         
-
+        out, _ = self.lstm(x, (h0, c0))
+        
+        out = self.fc(out[:, -1, :])
+        
+        return out
 def detect(detect_data:Queue,detect_imu_x:Queue,detect_imu_y:Queue,detect_imu_z:Queue,):
     detect_datas = []
     detect_imu_xs = []
     detect_imu_ys = []
     detect_imu_zs = []
-    now = datetime.now()
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
-    "cpu")
-    net = ConvNet().to(device)
-    mode = 'collect'
+    #载入模型
+    input_size = 4
+    hidden_size = 64
+    num_layers = 2
+    num_classes = 2
+    device = torch.device("cpu")
+    model = LSTM(input_size, hidden_size,num_layers, num_classes).to(device)
+    model.load_state_dict(torch.load('./weights/2023-03-08_02-53-12/best.pt'))
+    mode = 'detect'
     before = time.time()
     cnt = 0
+    data_lens = 30
     if mode == 'collect': 
         # 获取当前时间并格式化为字符串
         current_time = time.strftime("%Y-%m-%d_%H-%M-%S")
-        data_lens = 30
         first_time_save = True
         try:
             while True:
@@ -98,17 +105,39 @@ def detect(detect_data:Queue,detect_imu_x:Queue,detect_imu_y:Queue,detect_imu_z:
             file_data.close()
             if os.path.getsize('{}/detect_datas.csv'.format(folder_name)) == 0:
                 os.remove(folder_name)
-    # else:
-    #     while True:
-    #             detect_datas.append(detect_data.get())
-    #             detect_accs.append(detect_imu.get())
-    #             if len(detect_datas) > 15:
-    #                 detect_datas.pop(0)
-    #             if len(detect_accs)>15:
-    #                 detect_accs.pop(0)
-
-    #             if keyboard.is_pressed('q'):
-    #                 break
+    else:
+        while True:
+            detect_datas.append(detect_data.get())
+            detect_imu_xs.append(detect_imu_x.get())
+            detect_imu_ys.append(detect_imu_y.get())
+            detect_imu_zs.append(detect_imu_z.get())
+            if len(detect_datas) > data_lens:
+                detect_datas.pop(0)
+            if len(detect_imu_xs)>data_lens:
+                detect_imu_xs.pop(0)
+            if len(detect_imu_ys)>data_lens:
+                detect_imu_ys.pop(0)
+            if len(detect_imu_zs)>data_lens:
+                detect_imu_zs.pop(0)
+            if keyboard.is_pressed('d'):
+                pressed = time.time()
+                if pressed - before > 0.3:
+                    detect_datas_array = np.array(detect_datas)
+                    detect_imu_zs_array = np.array(detect_imu_zs)
+                    detect_imu_ys_array = np.array(detect_imu_ys)
+                    detect_imu_xs_array = np.array(detect_imu_xs)
+                    data = np.concatenate([detect_datas_array[:, np.newaxis],detect_imu_zs_array[:, np.newaxis],detect_imu_ys_array[:, np.newaxis],detect_imu_xs_array[:, np.newaxis]],axis=1)
+                    data_tensor = torch.from_numpy(data).float()
+                    data_tensor =data_tensor.view(-1, 30, 4)
+                    print(data_tensor.shape)
+                    with torch.no_grad():
+                        data_tensor = data_tensor.to(device)
+                        outputs = model(data_tensor)
+                        _, predicted = torch.max(outputs.data, 1)
+                        print(predicted)
+                    before =time.time()
+            if keyboard.is_pressed('q'):
+                    break
 
 if __name__ == "__main__":
     detect() 
