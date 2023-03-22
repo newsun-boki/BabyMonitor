@@ -9,6 +9,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -20,8 +21,14 @@ import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -32,6 +39,8 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -63,6 +72,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private TextView textImuX;
     private TextView textImuY;
     private TextView textImuZ;
+
+    private Button buttonStart;
+    private Button buttonStop;
 
     //音频相关
     private AudioRecord audioRecord;
@@ -100,11 +112,39 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.setTitle("signal recorder");
+        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PackageManager.PERMISSION_GRANTED);
         audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+
+        findViewWidget();
+
+
+        signalProcessor = new SignalProcessor(intRecordSampleRate,ultrasonicFrequency);
+        //画图相关
+        waveUtil = new WaveUtil();
+
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mPowerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        mWakeLock = mPowerManager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, getClass()
+                .getName());
+        //网络传输
+        socket_client = new Socket("192.168.43.125",555,MainActivity.this);
+
+
+    }
+
+    private void findViewWidget(){
         //界面控件查找
         textViewStatus = findViewById(R.id.textViewStatus);
+        String text = "Stopped";
+        SpannableString spannableString = new SpannableString(text);
+        ForegroundColorSpan foregroundColorSpan = new ForegroundColorSpan(Color.parseColor("#534600"));
+        spannableString.setSpan(foregroundColorSpan, 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        textViewStatus.setText(spannableString);
+        textViewStatus.setShadowLayer(10f, 0f, 0f, Color.parseColor("#534600"));
+
         editTextGainFactor = findViewById(R.id.editTextGainFactor);
         switchButton = findViewById(R.id.switch1);
         starImage = findViewById(R.id.imageView);
@@ -121,16 +161,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         textImuX = findViewById(R.id.textImuX);
         textImuY = findViewById(R.id.textImuY);
         textImuZ = findViewById(R.id.textImuZ);
-        signalProcessor = new SignalProcessor(intRecordSampleRate,ultrasonicFrequency);
-        //画图相关
-        waveUtil = new WaveUtil();
 
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mPowerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        mWakeLock = mPowerManager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, getClass()
-                .getName());
-        //网络传输
-        socket_client = new Socket("192.168.43.125",555,MainActivity.this);
+        buttonStart = findViewById(R.id.button);
+        buttonStart.setElevation(10);
 
 
     }
@@ -185,7 +218,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void buttonStart(View view){
         isActive = true;
         intGain = Integer.parseInt(editTextGainFactor.getText().toString());
-        textViewStatus.setText("Active");
+        String text = "Active";
+        SpannableString spannableString = new SpannableString(text);
+        ForegroundColorSpan foregroundColorSpan = new ForegroundColorSpan(Color.parseColor("#FFD700"));
+        spannableString.setSpan(foregroundColorSpan, 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        textViewStatus.setText(spannableString);
+        textViewStatus.setShadowLayer(10f, 0f, 0f, Color.parseColor("#FFD700"));
+//        textViewStatus.setText("Active");
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -200,9 +239,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         isActive = false;
         audioTrack.stop();
         audioRecord.stop();
-        textViewStatus.setText("Stopped");
+        String text = "Stopped";
+        SpannableString spannableString = new SpannableString(text);
+        ForegroundColorSpan foregroundColorSpan = new ForegroundColorSpan(Color.parseColor("#534600"));
+        spannableString.setSpan(foregroundColorSpan, 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        textViewStatus.setText(spannableString);
+        textViewStatus.setShadowLayer(10f, 0f, 0f, Color.parseColor("#534600"));
+//        textViewStatus.setText("Stopped");
         stopPlot(view);
-        writeFeatureDataToCsv();
+//        writeFeatureDataToCsv();
     }
 
     public void setStarImage(int detectionStatus){
@@ -322,16 +367,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             sinData[(int)j] = (double)(volume * Math.sin(2 * Math.PI * frequency * i));
         }
     }
+    public static String formatFloat(float value) {
 
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(3, RoundingMode.HALF_UP);
+        return bd.toString();
+    }
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         if (sensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             X_lateral = sensorEvent.values[0];
             Y_longitudinal = sensorEvent.values[1];
             Z_vertical = sensorEvent.values[2];
-            textImuX.setText(X_lateral + "");
-            textImuY.setText(Y_longitudinal + "");
-            textImuZ.setText(Z_vertical + "");
+            textImuX.setText(formatFloat(X_lateral));
+            textImuY.setText(formatFloat(Y_longitudinal));
+            textImuZ.setText(formatFloat(Z_vertical));
         }
 
     }

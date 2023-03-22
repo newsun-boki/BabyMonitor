@@ -21,7 +21,7 @@ import java.util.ArrayList;
 public class WaveShowView extends View {
 
     private float mWidth = 0,mHeight = 0;//自身大小
-    private int mBackGroundColor = Color.BLACK;
+    private int mBackGroundColor = Color.parseColor("#191919");
     private Paint mLinePaint;//画笔
     private Paint mWavePaint;//心电图的折现
     private Path mPath;//心电图的路径
@@ -32,7 +32,7 @@ public class WaveShowView extends View {
     //心电
     private float MAX_VALUE = (float) 0.2 ;
     private float WAVE_LINE_STROKE_WIDTH = 2;
-    private int mWaveLineColor = Color.parseColor("#EE4000");//波形颜色
+    private int mWaveLineColor = Color.parseColor("#FFD700");//波形颜色
     private  float nowX,nowY;//目前的xy坐标
 
     //网格
@@ -40,8 +40,8 @@ public class WaveShowView extends View {
     private final int GRID_BIG_WIDTH = 50;//每一个大网格的宽度和高度,包括线
     private int xSmallNum,ySmallNum,xBigNum,yBigNum;//小网格的横格，竖格，大网格的横格，竖格数量
     private final int GRID_LINE_WIDTH=2;//网格的线的宽度
-    private int mWaveSmallLineColor = Color.parseColor("#092100");//小网格颜色
-    private int mWaveBigLineColor = Color.parseColor("#1b4200");//小网格颜色
+    private int mWaveSmallLineColor = Color.parseColor("#191919");//小网格颜色
+    private int mWaveBigLineColor = Color.parseColor("#232323");//小网格颜色
 
     public WaveShowView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);

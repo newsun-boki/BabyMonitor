@@ -3,6 +3,7 @@
     <string name="enter_gain_factor">Enter Gain Factor</string>
     <string name="start">start</string>
     <string name="stop">stop and save</string>
-    <string name="status">Status</string>
+    <string name="status">Stopped</string>
+    <string name="status_label">status</string>
     <string name="speaker">speaker</string>
 </resources>

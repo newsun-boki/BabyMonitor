@@ -1,145 +1,273 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:background="#191919">
 
     <TextView
-        android:id="@+id/textViewStatus"
-        android:layout_width="wrap_content"
+        android:id="@+id/nav"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="176dp"
-        android:layout_marginTop="32dp"
-        android:text="@string/status"
+        android:text="Signal Collector"
+        android:fontFamily="@font/pop"
         android:textSize="20sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button2" />
+        android:textColor="@color/gold_dark"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"/>
+    <view.WaveShowView
+        android:id="@+id/waveview"
+        android:layout_width="406dp"
+        android:layout_height="400dp"
+        android:layout_below="@id/nav"/>
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/grid1"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="158dp"
-        android:layout_marginTop="22dp"
-        android:onClick="buttonStart"
-        android:text="@string/start"
-        app:flow_horizontalAlign="center"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextGainFactor" />
+        android:layout_below="@id/waveview"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal"
+        android:gravity="center">
 
-    <Button
-        android:id="@+id/button2"
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/textViewStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_margin="8dp"
+                android:text="@string/status"
+                android:textColor="@color/gold_dark"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/textViewStatusLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/status_label"
+                android:textColor="@color/gold_gray"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/textImuX"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:textColor="@color/gold_dark"
+                android:layout_gravity="center"
+                android:text="X_num"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/textImuXLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_gravity="bottom"
+                android:text="Imu X"
+                android:textColor="@color/gold_gray"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/textImuY"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:textColor="@color/gold_dark"
+                android:layout_gravity="center"
+                android:text="Y_num"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/textImuYLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_gravity="bottom"
+                android:text="Imu Y"
+                android:textColor="@color/gold_gray"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/textImuZ"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:textColor="@color/gold_dark"
+                android:layout_gravity="center"
+                android:text="Z_num"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/textImuZLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_gravity="bottom"
+                android:text="Imu Z"
+                android:textColor="@color/gold_gray"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+ <LinearLayout
+     android:layout_width="match_parent"
+     android:layout_height="wrap_content"
+     android:layout_below="@id/grid1"
+     android:layout_alignParentBottom="true">
+    <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="128dp"
-        android:layout_marginTop="40dp"
-        android:onClick="buttonStop"
-        android:text="@string/stop"
-        app:flow_horizontalAlign="center"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button" />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
+            <Button
+                android:id="@+id/button"
+                android:text=""
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:layout_margin="30dp"
+                android:background="@drawable/black_button"
+                android:onClick="buttonStart" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:text="START"
+                    android:textSize="20sp"
+                    android:textColor="#E6E6C4"
+                    android:gravity="center"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:text="Sending Out Waves\nDraw Phase Changes\nSend Msg to Server"
+                    android:textSize="10sp"
+                    android:textColor="#B8B199"/>
+            </LinearLayout>
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/button2"
+                android:text=""
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:layout_margin="30dp"
+                android:background="@drawable/black_button"
+                android:onClick="buttonStop" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:text="END"
+                    android:textSize="20sp"
+                    android:textColor="#E6E6C4"
+                    android:gravity="center"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:text="Stop Sending Out Waves\nMay Save the Info Locally"
+                    android:textSize="10sp"
+                    android:textColor="#B8B199"/>
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
     <EditText
         android:id="@+id/editTextGainFactor"
         android:layout_width="231dp"
         android:layout_height="61dp"
-        android:layout_marginStart="99dp"
-        android:layout_marginTop="48dp"
-        android:layout_marginEnd="103dp"
-        android:layout_marginBottom="30dp"
-        android:autofillHints=""
-        android:ems="10"
         android:hint="@string/enter_gain_factor"
-        android:inputType="number"
         android:text="1"
         android:textAlignment="center"
         android:textColorHint="#757575"
-        app:flow_horizontalAlign="center"
-        app:layout_constraintBottom_toTopOf="@+id/button"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.409"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:inputType="number"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="48dp" />
 
-    <view.WaveShowView
-        android:id="@+id/waveview"
-        android:layout_width="406dp"
-        android:layout_height="372dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintVertical_weight="1"
-        app:layout_constraintWidth_percent="1" />
+ </LinearLayout>
 
     <Switch
         android:id="@+id/switch1"
         android:layout_width="114dp"
         android:layout_height="48dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
+        android:checked="false"
+        android:rotation="0"
+        android:rotationX="-0"
+        android:showText="false"
         android:text="@string/speaker"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:checked="true" />
+        android:textAlignment="textEnd"
+        android:textColor="@color/gold_gray"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        android:visibility="visible"
+        tools:checked="false" />
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="26dp"
-        android:layout_marginTop="311dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
         android:background="#FF0000"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@android:drawable/star_off" />
+         />
 
-    <TextView
-        android:id="@+id/textImuX"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="58dp"
-        android:layout_marginTop="9dp"
-        android:layout_marginEnd="50dp"
-        android:text="TextView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/button"
-        app:layout_constraintTop_toBottomOf="@+id/textIMU" />
 
-    <TextView
-        android:id="@+id/textImuY"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="58dp"
-        android:layout_marginEnd="50dp"
-        android:text="TextView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/button"
-        app:layout_constraintTop_toBottomOf="@+id/textImuX" />
 
-    <TextView
-        android:id="@+id/textImuZ"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="306dp"
-        android:layout_marginTop="1dp"
-        android:layout_marginEnd="48dp"
-        android:text="TextView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textImuY" />
 
-    <TextView
-        android:id="@+id/textIMU"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="20dp"
-        android:text=" "
-        android:textColor="#000000"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextGainFactor" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</RelativeLayout>
