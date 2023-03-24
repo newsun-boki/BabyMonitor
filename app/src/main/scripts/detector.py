@@ -37,11 +37,11 @@ def detect(detect_data:Queue,detect_imu_x:Queue,detect_imu_y:Queue,detect_imu_z:
     input_size = 4
     hidden_size = 64
     num_layers = 2
-    num_classes = 2
+    num_classes = 4
     device = torch.device("cpu")
     model = LSTM(input_size, hidden_size,num_layers, num_classes).to(device)
-    model.load_state_dict(torch.load('./weights/2023-03-08_02-53-12/best.pt'))
-    mode = 'detect'
+    model.load_state_dict(torch.load('./weights/2023-03-24_00-02-39/best.pt'))
+    mode = 'dcollect'
     before = time.time()
     cnt = 0
     data_lens = 30
@@ -89,11 +89,11 @@ def detect(detect_data:Queue,detect_imu_x:Queue,detect_imu_y:Queue,detect_imu_z:
                         print("save:" + str(cnt))
                         cnt = cnt + 1
                         #画图
-                        plt.plot(detect_datas)
-                        plt.xlabel("value")
-                        plt.ylabel("num")
-                        plt.ylim((-0.1,0.1))
-                        plt.show()
+                        # plt.plot(detect_datas)
+                        # plt.xlabel("value")
+                        # plt.ylabel("num")
+                        # plt.ylim((-0.1,0.1))
+                        # plt.show()
                         before =time.time()
 
                 if keyboard.is_pressed('q'):

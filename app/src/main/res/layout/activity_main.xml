@@ -140,87 +140,97 @@
      android:layout_height="wrap_content"
      android:layout_below="@id/grid1"
      android:layout_alignParentBottom="true">
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center">
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/button"
-                android:text=""
-                android:layout_width="55dp"
-                android:layout_height="55dp"
-                android:layout_margin="30dp"
-                android:background="@drawable/black_button"
-                android:onClick="buttonStart" />
+     <LinearLayout
+         android:layout_width="284dp"
+         android:layout_height="match_parent"
+         android:gravity="center"
+         android:orientation="vertical">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:gravity="center">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:text="START"
-                    android:textSize="20sp"
-                    android:textColor="#E6E6C4"
-                    android:gravity="center"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:text="Sending Out Waves\nDraw Phase Changes\nSend Msg to Server"
-                    android:textSize="10sp"
-                    android:textColor="#B8B199"/>
-            </LinearLayout>
+         <LinearLayout
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:orientation="horizontal">
 
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/button2"
-                android:text=""
-                android:layout_width="55dp"
-                android:layout_height="55dp"
-                android:layout_margin="30dp"
-                android:background="@drawable/black_button"
-                android:onClick="buttonStop" />
+             <LinearLayout
+                 android:layout_width="142dp"
+                 android:layout_height="match_parent"
+                 android:gravity="center"
+                 android:orientation="vertical">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:gravity="center">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:text="END"
-                    android:textSize="20sp"
-                    android:textColor="#E6E6C4"
-                    android:gravity="center"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:text="Stop Sending Out Waves\nMay Save the Info Locally"
-                    android:textSize="10sp"
-                    android:textColor="#B8B199"/>
-            </LinearLayout>
+                 <TextView
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:layout_margin="5dp"
+                     android:gravity="center"
+                     android:text="START"
+                     android:textColor="#E6E6C4"
+                     android:textSize="20sp" />
 
-        </LinearLayout>
+                 <TextView
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:layout_margin="5dp"
+                     android:text="Sending Out Waves\nDraw Phase Changes\nSend Msg to Server"
+                     android:textColor="#B8B199"
+                     android:textSize="10sp" />
+             </LinearLayout>
 
-    </LinearLayout>
+             <Button
+                 android:id="@+id/button"
+                 android:layout_width="55dp"
+                 android:layout_height="55dp"
+                 android:background="@drawable/button_bg"
+                 android:onClick="buttonStart"
+                 android:layout_marginLeft="11dp"
+                 android:layout_marginBottom="20dp"
+                 android:layout_marginTop="10dp"
+                 android:text="" />
+         </LinearLayout>
+
+         <LinearLayout
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:orientation="horizontal">
+
+
+             <LinearLayout
+                 android:layout_width="143dp"
+                 android:layout_height="match_parent"
+                 android:gravity="center"
+                 android:orientation="vertical">
+
+                 <TextView
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:layout_margin="5dp"
+                     android:gravity="center"
+                     android:text="END"
+                     android:textColor="#E6E6C4"
+                     android:textSize="20sp" />
+
+                 <TextView
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:layout_margin="5dp"
+                     android:text="Stop Sending Out Waves\nMay Save the Info Locally"
+                     android:textColor="#B8B199"
+                     android:textSize="10sp" />
+             </LinearLayout>
+
+             <Button
+                 android:id="@+id/button2"
+                 android:layout_width="55dp"
+                 android:layout_height="55dp"
+                 android:layout_marginLeft="11dp"
+                 android:layout_marginTop="20dp"
+                 android:background="@drawable/button_bg"
+                 android:onClick="buttonStop"
+                 android:text="" />
+         </LinearLayout>
+
+     </LinearLayout>
     <EditText
         android:id="@+id/editTextGainFactor"
         android:layout_width="231dp"

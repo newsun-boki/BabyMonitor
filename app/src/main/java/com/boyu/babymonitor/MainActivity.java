@@ -216,38 +216,44 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
     public void buttonStart(View view){
-        isActive = true;
-        intGain = Integer.parseInt(editTextGainFactor.getText().toString());
-        String text = "Active";
-        SpannableString spannableString = new SpannableString(text);
-        ForegroundColorSpan foregroundColorSpan = new ForegroundColorSpan(Color.parseColor("#FFD700"));
-        spannableString.setSpan(foregroundColorSpan, 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        textViewStatus.setText(spannableString);
-        textViewStatus.setShadowLayer(10f, 0f, 0f, Color.parseColor("#FFD700"));
+        if(isActive == false) {
+            isActive = true;
+            intGain = Integer.parseInt(editTextGainFactor.getText().toString());
+            String text = "Active";
+            SpannableString spannableString = new SpannableString(text);
+            ForegroundColorSpan foregroundColorSpan = new ForegroundColorSpan(Color.parseColor("#FFD700"));
+            spannableString.setSpan(foregroundColorSpan, 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            textViewStatus.setText(spannableString);
+            textViewStatus.setShadowLayer(10f, 0f, 0f, Color.parseColor("#FFD700"));
 //        textViewStatus.setText("Active");
-        thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                threadLoop();
-            }
-        });
-        thread.start();
-        startPlot(view);
+            thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    threadLoop();
+                }
+            });
+            thread.start();
+            startPlot(view);
+        }
     }
 
     public void buttonStop(View view){
-        isActive = false;
-        audioTrack.stop();
-        audioRecord.stop();
-        String text = "Stopped";
-        SpannableString spannableString = new SpannableString(text);
-        ForegroundColorSpan foregroundColorSpan = new ForegroundColorSpan(Color.parseColor("#534600"));
-        spannableString.setSpan(foregroundColorSpan, 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        textViewStatus.setText(spannableString);
-        textViewStatus.setShadowLayer(10f, 0f, 0f, Color.parseColor("#534600"));
+
+        if(isActive == true){
+            isActive = false;
+            audioTrack.stop();
+            audioRecord.stop();
+            String text = "Stopped";
+            SpannableString spannableString = new SpannableString(text);
+            ForegroundColorSpan foregroundColorSpan = new ForegroundColorSpan(Color.parseColor("#534600"));
+            spannableString.setSpan(foregroundColorSpan, 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            textViewStatus.setText(spannableString);
+            textViewStatus.setShadowLayer(10f, 0f, 0f, Color.parseColor("#534600"));
 //        textViewStatus.setText("Stopped");
-        stopPlot(view);
+            stopPlot(view);
 //        writeFeatureDataToCsv();
+        }
+
     }
 
     public void setStarImage(int detectionStatus){

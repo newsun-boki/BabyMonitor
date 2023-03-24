@@ -11,4 +11,6 @@
     <color name="green">#00FF0D</color>
     <color name="gold_dark">#F1E5A5</color>
     <color name="gold_gray">#BCB278</color>
+    <color name="transparent">#00BCB278</color>
+    <color name="dark_gray">#191919</color>
 </resources>

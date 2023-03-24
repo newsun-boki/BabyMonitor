@@ -27,7 +27,7 @@ class LSTM(nn.Module):
 input_size = 4
 hidden_size = 64
 num_layers = 2
-num_classes = 2
+num_classes = 4 #增加类的话改这里
 batch_size = 8
 learning_rate = 0.001
 num_epochs = 300
@@ -41,28 +41,42 @@ model = LSTM(input_size, hidden_size,num_layers, num_classes).to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-
-detect_datas_circle=np.loadtxt("./output/2023-03-07_23-13-47_circle/detect_datas.csv",delimiter=",")
-detect_imu_zs_circle=np.loadtxt("./output/2023-03-07_23-13-47_circle/detect_imu_zs.csv",delimiter=",")
-detect_imu_ys_circle=np.loadtxt("./output/2023-03-07_23-13-47_circle/detect_imu_ys.csv",delimiter=",")
-detect_imu_xs_circle=np.loadtxt("./output/2023-03-07_23-13-47_circle/detect_imu_xs.csv",delimiter=",")
+rootpath_circle = "./output/2023-03-07_23-13-47_circle/"
+detect_datas_circle=np.loadtxt(rootpath_circle + "detect_datas.csv",delimiter=",")
+detect_imu_zs_circle=np.loadtxt(rootpath_circle + "detect_imu_zs.csv",delimiter=",")
+detect_imu_ys_circle=np.loadtxt(rootpath_circle + "detect_imu_ys.csv",delimiter=",")
+detect_imu_xs_circle=np.loadtxt(rootpath_circle + "detect_imu_xs.csv",delimiter=",")
 label_circle = np.array([0 for _ in range(detect_datas_circle.shape[0])])
 
-detect_datas_updown=np.loadtxt("./output/2023-03-08_01-17-35_UpDown/detect_datas.csv",delimiter=",")
-detect_imu_zs_updown=np.loadtxt("./output/2023-03-08_01-17-35_UpDown/detect_imu_zs.csv",delimiter=",")
-detect_imu_ys_updown=np.loadtxt("./output/2023-03-08_01-17-35_UpDown/detect_imu_ys.csv",delimiter=",")
-detect_imu_xs_updown=np.loadtxt("./output/2023-03-08_01-17-35_UpDown/detect_imu_xs.csv",delimiter=",")
+rootpath_updown = "./output/2023-03-08_01-17-35_UpDown/"
+detect_datas_updown=np.loadtxt(rootpath_updown+"detect_datas.csv",delimiter=",")
+detect_imu_zs_updown=np.loadtxt(rootpath_updown+"detect_imu_zs.csv",delimiter=",")
+detect_imu_ys_updown=np.loadtxt(rootpath_updown+"detect_imu_ys.csv",delimiter=",")
+detect_imu_xs_updown=np.loadtxt(rootpath_updown+"detect_imu_xs.csv",delimiter=",")
 label_updown = np.array([1 for _ in range(detect_datas_updown.shape[0])])
 
+rootpath_leftright = "./output/2023-03-23_22-11-18_RightLeft/"
+detect_datas_leftright=np.loadtxt(rootpath_leftright+"detect_datas.csv",delimiter=",")
+detect_imu_zs_leftright=np.loadtxt(rootpath_leftright+"detect_imu_zs.csv",delimiter=",")
+detect_imu_ys_leftright=np.loadtxt(rootpath_leftright+"detect_imu_ys.csv",delimiter=",")
+detect_imu_xs_leftright=np.loadtxt(rootpath_leftright+"detect_imu_xs.csv",delimiter=",")
+label_leftright = np.array([2 for _ in range(detect_datas_leftright.shape[0])])
 
-detect_datas = np.concatenate((detect_datas_circle,detect_datas_updown),axis=0)
-detect_imu_zs = np.concatenate((detect_imu_zs_circle,detect_imu_zs_updown),axis=0)
-detect_imu_ys = np.concatenate((detect_imu_ys_circle,detect_imu_ys_updown),axis=0)
-detect_imu_xs = np.concatenate((detect_imu_xs_circle,detect_imu_xs_updown),axis=0)
+rootpath_zupdown = "./output/2023-03-23_22-47-14_ZUpDown/"
+detect_datas_zupdown=np.loadtxt(rootpath_zupdown+"detect_datas.csv",delimiter=",")
+detect_imu_zs_zupdown=np.loadtxt(rootpath_zupdown+"detect_imu_zs.csv",delimiter=",")
+detect_imu_ys_zupdown=np.loadtxt(rootpath_zupdown+"detect_imu_ys.csv",delimiter=",")
+detect_imu_xs_zupdown=np.loadtxt(rootpath_zupdown+"detect_imu_xs.csv",delimiter=",")
+label_zupdown = np.array([3 for _ in range(detect_datas_zupdown.shape[0])])
+
+detect_datas = np.concatenate((detect_datas_circle,detect_datas_updown,detect_datas_leftright,detect_datas_zupdown),axis=0)
+detect_imu_zs = np.concatenate((detect_imu_zs_circle,detect_imu_zs_updown,detect_imu_zs_leftright,detect_imu_zs_zupdown),axis=0)
+detect_imu_ys = np.concatenate((detect_imu_ys_circle,detect_imu_ys_updown,detect_imu_ys_leftright,detect_imu_ys_zupdown),axis=0)
+detect_imu_xs = np.concatenate((detect_imu_xs_circle,detect_imu_xs_updown,detect_imu_xs_leftright,detect_imu_xs_zupdown),axis=0)
 
 # Merge detect_datas and detect_imu_zs into one input sequence
 data = np.concatenate([detect_datas[:, :, np.newaxis],detect_imu_zs[:, :, np.newaxis],detect_imu_ys[:, :, np.newaxis],detect_imu_xs[:, :, np.newaxis]],axis=2)
-labels = np.concatenate((label_circle,label_updown))
+labels = np.concatenate((label_circle,label_updown,label_leftright,label_zupdown))
 print(data.shape)
 print(labels)
 x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
