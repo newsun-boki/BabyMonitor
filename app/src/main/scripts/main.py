@@ -3,7 +3,7 @@ import keyboard
 from detector import detect
 from multiprocessing import Process,Queue
 import math
-
+import csv
 visualize_data = 'acc' #acc or feature
 
 
@@ -16,6 +16,11 @@ def msgProcessor(msg:str):
     z = round(float(values[3]),5)
     return feature,x,y,z
 
+
+def write_to_csv(data, filename):
+    with open(filename, 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(data)
 
 def main():
     plot_datas_feature = Queue()
@@ -34,11 +39,22 @@ def main():
     udpServer = UDPServer('',555)
     udpServer.create_socket()
     datas = []
+
+    feature_csv_file = 'feature.csv'
+    x_csv_file = 'x.csv'
+    y_csv_file = 'y.csv'
+    z_csv_file = 'z.csv'
+    acc_csv_file = 'acc.csv'
     while True:
         #接受消息
         msg = udpServer.receive_socket()
         feature,x,y,z= msgProcessor(msg)
         acc= round(math.sqrt(x*x + y*y + z*z),5)
+        write_to_csv([feature], feature_csv_file)
+        write_to_csv([x], x_csv_file)
+        write_to_csv([y], y_csv_file)
+        write_to_csv([z], z_csv_file)
+        write_to_csv([acc], acc_csv_file)
         #收集用于检测的数据
         detect_data.put(feature)
         if detect_data.qsize()>2:

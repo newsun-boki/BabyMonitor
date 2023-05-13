@@ -41,14 +41,18 @@ def detect(detect_data:Queue,detect_imu_x:Queue,detect_imu_y:Queue,detect_imu_z:
     device = torch.device("cpu")
     model = LSTM(input_size, hidden_size,num_layers, num_classes).to(device)
     model.load_state_dict(torch.load('./weights/2023-03-24_00-02-39/best.pt'))
-    mode = 'dcollect'
+    gestures = ['circle','UpDown','RightLeft','ZUpDown']
+    mode = 'collect'
     before = time.time()
     cnt = 0
     data_lens = 30
+    
     if mode == 'collect': 
         # 获取当前时间并格式化为字符串
         current_time = time.strftime("%Y-%m-%d_%H-%M-%S")
         first_time_save = True
+        collect_times = 0
+        begin_collect = False
         try:
             while True:
                 detect_datas.append(detect_data.get())
@@ -63,8 +67,24 @@ def detect(detect_data:Queue,detect_imu_x:Queue,detect_imu_y:Queue,detect_imu_z:
                     detect_imu_ys.pop(0)
                 if len(detect_imu_zs)>data_lens:
                     detect_imu_zs.pop(0)
+                if begin_collect:
+                    collect_times = collect_times + 1
+                    if collect_times > data_lens:
+                        begin_collect = False
+                        collect_times = 0
+                        writer_x = csv.writer(file_x)
+                        writer_x.writerow(detect_imu_xs)
+                        writer_y = csv.writer(file_y)
+                        writer_y.writerow(detect_imu_ys)
+                        writer_z = csv.writer(file_z)
+                        writer_z.writerow(detect_imu_zs)
+                        writer_data = csv.writer(file_data)
+                        writer_data.writerow(detect_datas)
+                        print("save:" + str(cnt))
+                        cnt = cnt + 1
                 if keyboard.is_pressed('s'):
                     pressed = time.time()
+                    begin_collect = True
                     if pressed - before > 0.3:
                         if first_time_save == True:
                             first_time_save = False
@@ -77,17 +97,7 @@ def detect(detect_data:Queue,detect_imu_x:Queue,detect_imu_y:Queue,detect_imu_z:
                             file_data = open('{}/detect_datas.csv'.format(folder_name), mode='w', newline='') 
                         else:
                             plt.close()
-
-                        writer_x = csv.writer(file_x)
-                        writer_x.writerow(detect_imu_xs)
-                        writer_y = csv.writer(file_y)
-                        writer_y.writerow(detect_imu_ys)
-                        writer_z = csv.writer(file_z)
-                        writer_z.writerow(detect_imu_zs)
-                        writer_data = csv.writer(file_data)
-                        writer_data.writerow(detect_datas)
-                        print("save:" + str(cnt))
-                        cnt = cnt + 1
+                        
                         #画图
                         # plt.plot(detect_datas)
                         # plt.xlabel("value")
@@ -106,6 +116,8 @@ def detect(detect_data:Queue,detect_imu_x:Queue,detect_imu_y:Queue,detect_imu_z:
             if os.path.getsize('{}/detect_datas.csv'.format(folder_name)) == 0:
                 os.remove(folder_name)
     else:
+        begin_detect = False
+        detect_times = 0
         while True:
             detect_datas.append(detect_data.get())
             detect_imu_xs.append(detect_imu_x.get())
@@ -119,9 +131,11 @@ def detect(detect_data:Queue,detect_imu_x:Queue,detect_imu_y:Queue,detect_imu_z:
                 detect_imu_ys.pop(0)
             if len(detect_imu_zs)>data_lens:
                 detect_imu_zs.pop(0)
-            if keyboard.is_pressed('d'):
-                pressed = time.time()
-                if pressed - before > 0.3:
+            if begin_detect:
+                detect_times = detect_times + 1
+                if detect_times> data_lens:
+                    detect_times = 0
+                    begin_detect = False
                     detect_datas_array = np.array(detect_datas)
                     detect_imu_zs_array = np.array(detect_imu_zs)
                     detect_imu_ys_array = np.array(detect_imu_ys)
@@ -129,12 +143,17 @@ def detect(detect_data:Queue,detect_imu_x:Queue,detect_imu_y:Queue,detect_imu_z:
                     data = np.concatenate([detect_datas_array[:, np.newaxis],detect_imu_zs_array[:, np.newaxis],detect_imu_ys_array[:, np.newaxis],detect_imu_xs_array[:, np.newaxis]],axis=1)
                     data_tensor = torch.from_numpy(data).float()
                     data_tensor =data_tensor.view(-1, 30, 4)
-                    print(data_tensor.shape)
                     with torch.no_grad():
                         data_tensor = data_tensor.to(device)
                         outputs = model(data_tensor)
                         _, predicted = torch.max(outputs.data, 1)
-                        print(predicted)
+                        print(gestures[int(predicted)])
+            if keyboard.is_pressed('d'):
+                pressed = time.time()
+                begin_detect =True
+                if pressed - before > 0.3:
+                   
+                        
                     before =time.time()
             if keyboard.is_pressed('q'):
                     break
