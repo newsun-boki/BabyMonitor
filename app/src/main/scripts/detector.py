@@ -40,9 +40,9 @@ def detect(detect_data:Queue,detect_imu_x:Queue,detect_imu_y:Queue,detect_imu_z:
     num_classes = 4
     device = torch.device("cpu")
     model = LSTM(input_size, hidden_size,num_layers, num_classes).to(device)
-    model.load_state_dict(torch.load('./weights/2023-03-24_00-02-39/best.pt'))
-    gestures = ['circle','UpDown','RightLeft','ZUpDown']
-    mode = 'collect'
+    model.load_state_dict(torch.load('./weights/2023-05-13_12-01-23/best.pt'))
+    gestures = ['circle','no_gesture','shaking','yupdown']
+    mode = 'dcollect'
     before = time.time()
     cnt = 0
     data_lens = 30
